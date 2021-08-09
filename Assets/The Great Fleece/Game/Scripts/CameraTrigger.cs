@@ -17,7 +17,6 @@ public class CameraTrigger : MonoBehaviour
     {
         if (other.tag == "Player")
         {
-            Debug.Log("Triggered activated");           
             Camera.main.transform.position = _targetCamera.transform.position;
             Camera.main.transform.rotation = _targetCamera.transform.rotation; 
         }
