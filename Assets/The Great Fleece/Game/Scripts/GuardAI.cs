@@ -13,7 +13,8 @@ public class GuardAI : MonoBehaviour
     //var
     private int currentTarget = 0;
     private bool _isReverse = false;
-    private bool _targetReached;
+    private bool _targetReached = false;
+    private bool _coinSearching = false;
 
     //config
     private float _waitToMoveMin = 2f;
@@ -24,6 +25,9 @@ public class GuardAI : MonoBehaviour
     {
         _agent = GetComponent<NavMeshAgent>();
         _animator = GetComponent<Animator>();
+
+        _animator.SetBool("Walk", true);
+        _agent.SetDestination(waypoints[currentTarget].position);
     }
 	
 	// Update is called once per frame
@@ -32,12 +36,16 @@ public class GuardAI : MonoBehaviour
         if (waypoints.Count > 0 && waypoints[currentTarget] != null)
         {           
 
-            float distance = Vector3.Distance(transform.position, waypoints[currentTarget].position);
-            if (distance < 1 && _targetReached == false)
+            float distance = Vector3.Distance(transform.position, _agent.destination);
+            if (distance < 2.5f && _targetReached == false)
             {
                 _targetReached = true;
 
-                if (currentTarget >= waypoints.Count - 1)
+                if (_coinSearching == true)
+                {
+                    StartCoroutine(SearchForCoin());
+                }
+                else if (currentTarget >= waypoints.Count - 1)
                 {
                     _isReverse = true;
                     StartCoroutine(WaitBeforeMoving());
@@ -51,24 +59,33 @@ public class GuardAI : MonoBehaviour
                 {
                     ChangeWaypoint();
                 }
+
+                
             }
-            _agent.SetDestination(waypoints[currentTarget].position);
+            
         }
     }
 
     void ChangeWaypoint()
     {
-        _targetReached = false;
+        if (_coinSearching == false)
+        {
+            _targetReached = false;
 
-        if (_isReverse == true)
-        {
-            currentTarget--;
+            if (waypoints.Count != 1)
+            {
+                if (_isReverse == true)
+                {
+                    currentTarget--;
+                }
+                else if (_isReverse == false)
+                {
+                    currentTarget++;
+                }
+                _agent.SetDestination(waypoints[currentTarget].position);
+                _animator.SetBool("Walk", true);
+            }
         }
-        else if (_isReverse == false)
-        {
-            currentTarget++;
-        }
-        _animator.SetBool("Walk", true);
     }
 
     IEnumerator WaitBeforeMoving()
@@ -76,5 +93,33 @@ public class GuardAI : MonoBehaviour
         _animator.SetBool("Walk", false);
         yield return new WaitForSeconds(Random.Range(_waitToMoveMin, _waitToMoveMax));
         ChangeWaypoint();
+    }
+
+    public void CheckForCoin(Vector3 CoinPos)
+    {
+        _agent.SetDestination(CoinPos);
+        _animator.SetBool("Walk", true);
+        _coinSearching = true;
+        _targetReached = false;
+    }
+
+    IEnumerator SearchForCoin()
+    {
+        _animator.SetBool("Walk", false);
+        yield return new WaitForSeconds(Random.Range(_waitToMoveMin, _waitToMoveMax));
+
+        _animator.SetBool("Walk", true);
+
+        _coinSearching = false;
+
+        _targetReached = false;
+        if (waypoints[currentTarget] != null)
+        {
+            _agent.SetDestination(waypoints[currentTarget].position);
+        }
+        else
+        {
+            _agent.SetDestination(waypoints[0].position);
+        }
     }
 }
