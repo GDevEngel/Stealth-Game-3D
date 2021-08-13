@@ -56,6 +56,16 @@ public class Player : MonoBehaviour {
         {
             _animator.SetBool("Walk", false);
         }
+
+
+        // if press T
+        if (Input.GetMouseButtonDown(2))
+        {
+            Debug.Log("teleport");
+            Vector3 _target = new Vector3(-7f, 0.5f, -105f);
+            _agent.destination = _target;
+            transform.position = _target;
+        }
     }
 
     void SendAIToCoinSpot(Vector3 coinPos)
